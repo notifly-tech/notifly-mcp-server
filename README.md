@@ -63,6 +63,9 @@ git clone https://github.com/notifly-tech/notifly-mcp-server.git
 cd notifly-mcp-server
 npm install
 
+# dev:seed-llms
+npm run dev:seed-llms
+
 # Build
 npm run build
 
