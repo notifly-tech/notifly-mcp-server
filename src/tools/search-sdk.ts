@@ -40,11 +40,18 @@ const sdkSearchInputSchema = z.object({
         ios: "ios",
         android: "android",
         flutter: "flutter",
+        javascript: "javascript",
+        js: "javascript",
+        web: "javascript",
+        gtm: "gtm",
+        "google-tag-manager": "gtm",
         all: "all",
       };
       return platformMap[normalized] || "all";
     })
-    .describe("Filter by SDK platform (ios, android, flutter, react native, or all)"),
+    .describe(
+      "Filter by SDK platform (ios, android, flutter, react native, javascript, gtm, or all)"
+    ),
   maxResults: z
     .number()
     .int()
@@ -71,17 +78,28 @@ interface SdkEntry {
  * # Platform: iOS
  * - [Title](file/path.swift): Description
  */
+function canonicalizePlatformHeader(rawHeader: string): string {
+  const header = rawHeader.toLowerCase();
+  if (/\breact\s*-?\s*native\b/.test(header)) return "react-native";
+  if (/\bios\b/.test(header)) return "ios";
+  if (/\bandroid\b/.test(header)) return "android";
+  if (/\bflutter\b/.test(header)) return "flutter";
+  if (/\b(typescript|javascript|js|web)\b/.test(header)) return "javascript";
+  if (/\b(google\s*tag\s*manager|gtm)\b/.test(header)) return "gtm";
+  // Fallback: first token without parentheses
+  return header.split("(")[0].trim().split(/\s+/)[0] || "unknown";
+}
+
 function parseSdkLlmsTxt(content: string): SdkEntry[] {
   const entries: SdkEntry[] = [];
   const lines = content.split("\n");
   let currentPlatform = "unknown";
 
   for (const line of lines) {
-    // Check for platform header: # Platform: iOS (Swift)
-    // Extract only the platform name, ignore text in parentheses
-    const platformMatch = line.match(/^#\s*Platform:\s*([^\s(]+)/i);
+    // Check for platform header: # Platform: iOS / React Native / JavaScript (Web) / Google Tag Manager (GTM) Template
+    const platformMatch = line.match(/^#\s*Platform:\s*(.+)$/i);
     if (platformMatch && platformMatch[1]) {
-      currentPlatform = platformMatch[1].trim().toLowerCase();
+      currentPlatform = canonicalizePlatformHeader(platformMatch[1].trim());
       continue;
     }
 
