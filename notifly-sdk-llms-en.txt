@@ -1,0 +1,128 @@
+# Notifly SDK Documentation for LLMs (English)
+# This file provides a structured index so AI assistants can intelligently search SDK source code.
+# All links point to GitHub raw content, allowing direct source retrieval.
+# Format: - [Title](URL): Purpose/features/implementation overview/key usage (concise)
+
+# Platform: iOS
+
+## Core
+- [Notifly Main Entry](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Notifly/Notifly.swift): Singleton entry point of Notifly iOS SDK. After initialization, it owns Tracking/User/Notifications/InApp managers and registers UserDefaults namespace while persisting project/account credentials.
+- [Public API](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Notifly/Notifly+PublicAPI.swift): Public interface. Requires FirebaseApp to be initialized. Performs initialize with project/account, bridges APNs/FCM tokens, starts session, tracks push clicks (foreground/background), sets user ID/properties, manages in‑app event listeners, sets SDK wrapper type/version, and provides a scheduled push test utility.
+- [Helper](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Notifly/Notifly+Helper.swift): Internal utilities and common helpers. Includes parameter validation (e.g., projectId regex), SDK wrapper getters/setters, and thread‑safe helper routines.
+
+## Infrastructure - API
+- [API Client](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/API/NotiflyAPI.swift): Backend HTTP wrapper. Provides session authorization (authorizeSession), event upload (trackEvent with retry on token expiry), and user state sync (requestSyncState). Detects token-expired responses and refreshes/retries automatically. Returns Combine publishers.
+- [Request Builder/Response](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/API/NotiflyAPI+Request.swift): Builder/decoder set. Applies default headers (X-Notifly-SDK-Version/Wrapper), composes Bearer token, JSON‑encodes request bodies, and wraps URLSession with Combine publishers.
+
+## Infrastructure - Auth
+- [Auth](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/Auth/Auth.swift): Username/password based session authorization and refresh, issues/stores Authorization header, refreshes on expiry. Exposes authorizationPub so NotiflyAPI requests can inject tokens automatically.
+
+## Infrastructure - In‑App Message
+- [Campaign Model](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/Campaign.swift): In‑app campaign/message payload model. Includes properties necessary for rendering such as title/body/image/actions.
+- [In‑App Constants](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/InAppMessage+Constant.swift): Keys, events, and timing constants used by in‑app processing.
+- [In‑App Manager](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/InAppMessageManager.swift): Manages in‑app lifecycle/display, syncs user state (userStateManager.syncState), evaluates conditions, registers/unregisters event listeners, prevents duplicate displays, and bridges web/native rendering.
+- [Segmentation Helper](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/SegmentationHelper.swift): Evaluates audience conditions based on user properties/behavior. Supports random bucket targeting and filters.
+- [User State Constants](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/UserState+Constant.swift): Symbols and keys that define user state categories.
+- [User State Manager](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/UserStateManager.swift): Tracks first‑visit/returning and event‑based states and persists them for in‑app decisioning.
+- [WebView Modal VC](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/WebViewModalViewController.swift): Renders web content for in‑app message. Handles close actions, deep links, and tracking hooks.
+
+## Infrastructure - Notifications/Tracking/User
+- [Notifications Manager](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/Notifications/NotificationsManager.swift): Orchestrates APNs/FCM token acquisition with timeout and exponential backoff, suppresses duplicate internal events, handles foreground presentation options, opens deep links on tap, tracks internal click events, and re‑requests registration when needed. Automates flow from APNs receipt to FCM registration/retry.
+- [Tracking Manager](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/Tracking/TrackingManager.swift): Queues internal (session start, push clicks, device/user property changes) and custom events, batches uploads with retry, prevents duplicates, validates timestamps/timezones, and merges properties safely.
+- [User Manager](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/User/UserManager.swift): Gets/stores Notifly user ID, sets external user ID, and persists user properties. Integrates with in‑app state and segmentation flow.
+
+## Extension
+- [Notification Service Extension](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyExtension/NotificationServiceExtension.swift): Enables rich push (image/video) processing. Modifies content, handles expiry, and tracks delivery.
+- [Extension API](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyExtension/NotiflyExtensionAPI.swift): Helper layer for authentication/tracking/content loading in extensions. Allows minimal communication without the main SDK in extension targets.
+
+## Utilities
+- [AnyCodable](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/AnyCodable.swift): Type‑erased wrapper for safe JSON encoding/decoding across heterogeneous values.
+- [AppHelper](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/AppHelper.swift): App context helpers—bundle/environment/version/permissions, open URL/App Store utilities, environment branching for UI logic.
+- [AsyncWorker](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/AsyncWorker.swift): Background task queue/executor. Supports timeout/cancel, serial/parallel scheduling, and orchestrates post‑init async tasks (session start/state sync).
+- [Constants](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/Constants.swift): Shared constants such as endpoints, regex, event names, property keys, operators, and time utilities. Defines SDK version and wrapper metadata.
+- [Credentials](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/Credentials.swift): Username/password credential model, encoded into authorization request body.
+- [Logger](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/Logger.swift): Minimal Info/Error logging helper. Logs key stages: init, token acquisition, notification handling, etc.
+- [MessageData](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/MessageData.swift): Shared payload model for notifications/in‑app rendering.
+- [NotiflyCustomUserDefaults](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/NotiflyCustomUserDefaults.swift): SDK namespace/flags store. Persists project/account info, APNs registration flags, and wrapper type/version for init/retry coordination.
+- [NotiflyError](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/NotiflyError.swift): SDK‑wide error taxonomy with recovery hints/context for consistent error handling.
+- [Timezone](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/Timezone.swift): Timezone ID validation and conversions; filters invalid timezones during user property updates.
+- [TrackingEvent](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/TrackingEvent.swift): Standard/custom event schema and JSON serialization.
+- [UUID+](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/UUID+.swift): RFC4122 UUID utilities for generation/parsing.
+
+## Misc
+- [SDK Header](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/notifly_sdk.h): Public header/version info.
+- [Privacy Info](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/PrivacyInfo.xcprivacy): Privacy declarations.
+- [CocoaPods Spec (Main)](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/notifly_sdk.podspec): CocoaPods spec for main SDK—sources, targets, dependencies, and resources.
+- [CocoaPods Spec (Push Extension)](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/notifly_sdk_push_extension.podspec): CocoaPods spec for Notification Service Extension—target, deps, build settings.
+- [DocC Overview](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/notifly_ios_sdk.docc/notifly_ios_sdk.md): DocC root for public API and conceptual docs.
+- [SwiftPM Package](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Package.swift): Swift Package manifest—dependencies/targets.
+- [Makefile](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Makefile): Local build/test/publish automation targets.
+- [CHANGELOG](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/CHANGELOG.md): Release notes and changes.
+- [README](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/README.md): SDK intro and basic usage.
+
+# Sample Apps (iOS)
+
+## NotiflyIOSSample (SwiftUI)
+- [App Entry (structure)](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyIOSSample/NotiflyIOSSampleApp.swift): SwiftUI app entry. Starting point for SDK initialization/environment wiring.
+- [AppDelegate](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyIOSSample/AppDelegate.swift): Notification permission/token flow and lifecycle binding example.
+- [DeepLink Manager](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyIOSSample/DeepLinkManager.swift): Routes links from notifications/in‑app messages.
+- [DeepLink View](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyIOSSample/DeepLinkView.swift): Example of rendering deep link destination.
+- [ContentView](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyIOSSample/ContentView.swift): Sample UI and SDK call integration.
+- [Notification Service Extension](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyNotificationExtension/NotificationService.swift): Rich push handling (media attach/modify) example.
+
+## NotiflyTestApp (UIKit)
+- [AppDelegate](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/AppDelegate.swift): SDK initialization/push registration/permission handling example.
+- [SceneDelegate](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/SceneDelegate.swift): Window/root controller setup.
+- [Main Screen](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/MainViewController.swift): Entry point UI for primary features.
+- [Push Notification Test](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/PushNotificationTestViewController.swift): End‑to‑end push send/receive/tap test flow.
+- [Tracking Test](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/TrackingTestViewController.swift): Invokes tracking calls and verifies responses.
+- [User Settings Test](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/UserSettingsTestViewController.swift): Demonstrates user identification and property updates.
+- [Notification Service Extension](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyNotificationExtension/NotificationService.swift): Rich push processing (media attach/modify) example.
+
+# Platform: React Native
+
+## Core (TypeScript)
+- [JS Public API (index)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/index.tsx): Public interface for React Native. Exposes initialize/setUserId/getNotiflyUserId/setUserProperties/setEmail/setPhoneNumber/setTimezone/trackEvent/disableInAppMessage/addNotificationClickListener. Handles TurboModule detection, iOS JSON stringification for object params, and Android‑only setLogLevel.
+- [TurboModule Spec](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/NativeNotiflyReactNativeSdk.ts): Native bridge interface definition. Declares initialize, user and property updates, event tracking, setLogLevel (Android), in‑app toggling, and click listener with strict typing via TurboModuleRegistry.
+- [Event Names](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/constants.ts): Event name constants (e.g., Notifly#NotificationClicked).
+- [Event Receiver](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/events/EventReceiver.ts): Wraps NativeEventEmitter, manages listener arrays by event type, and safely parses notification.rawPayload (stringified JSON) for NotificationClicked events.
+- [Types (index)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/types/index.ts): InitializeParams (projectId/username/password) and dictionary types for UserProperties/EventProperties; re‑exports notification types.
+- [Types (notification)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/types/notification.ts): OSNotification/OSNotificationClickEvent/OSNotificationImportance. Includes campaignId/title/body/importance/url/imageUrl/sentTime/ttl/customData/rawPayload.
+
+## Build/Config
+- [Babel Config](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/babel.config.js): Transpilation settings based on metro‑react‑native‑babel‑preset.
+- [TypeScript Config](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/tsconfig.json): Source type checking configuration.
+- [TypeScript Build Config](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/tsconfig.build.json): Emit‑only TS build settings for distribution.
+- [Jest Config](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/jest.config.js): Unit test configuration.
+- [Package Metadata](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/package.json): Package info, scripts, dependencies, main entry points.
+- [CocoaPods Spec (RN)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/notifly_react_native_sdk.podspec): iOS native bridge distribution metadata (sources/targets/deps/frameworks).
+
+## iOS Native Bridge
+- [Obj‑C Bridge Declarations](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/ios/NotiflySdk.m): Exposes Swift implementation to React Native with RCT_EXTERN_MODULE/METHODs (initialize/user/properties/tracking/in‑app/FCM registration) returning Promises.
+- [Swift Bridge Implementation](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/ios/NotiflySdk.swift): Calls Notifly iOS SDK; sets wrapper type/version, initialize, user ID/properties/email/phone/timezone setters, event tracking with JSON parsing, in‑app disable, and FCM token registration.
+- [Bridging Header](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/ios/NotiflySdk-Bridging-Header.h): Swift–ObjC bridging header for the native module.
+
+## Android Native Bridge
+- [RN Module Implementation](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/main/java/tech/notifly/rn/NotiflySdkModule.kt): ReactMethods for native SDK calls. Sets wrapper type/version, initialize, user/properties/email/phone/timezone, event tracking, setLogLevel (Android), in‑app disable, and notification click listener (emits events to JS via DeviceEventEmitter). Uses coroutines for async work.
+- [Utility (Event Mapping)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/main/java/tech/notifly/rn/NotiflySdkUtils.kt): Converts native notification events to WritableMap; maps fields to JS‑friendly primitives (including rawPayload).
+- [Package Registration](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/main/java/tech/notifly/rn/NotiflySdkPackage.kt): Registers the native module with RN for autolinking/manual linking.
+- [Spec (New Architecture)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/newarch/NotiflySdkSpec.kt): Spec definition for New Architecture template.
+- [Spec (Old Architecture)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/oldarch/NotiflySdkSpec.kt): Spec definition for Old Architecture template.
+- [AndroidManifest](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/main/AndroidManifest.xml): Module manifest for package/permissions/providers.
+- [Gradle Build Script](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/build.gradle): Android build/publish settings for the module.
+
+# Sample App (React Native)
+- [Root Config](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/package.json): Sample app package/scripts.
+- [iOS Podfile](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/ios/Podfile): iOS dependency/Pod configuration including bridge/extension targets.
+- [iOS Notification Service Extension](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/ios/NotiflyNotificationExtension/NotificationService.swift): Rich push handling example.
+- [Metro Config](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/metro.config.js): Bundler configuration.
+- [Entry/App Source](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/index.js): Sample app entry; wires SDK initialize and calls.
+- [react‑native Config](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/react-native.config.js): Linking/native configuration.
+- [iOS Bridging Header (Example)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/ios/NotiflySdkExample-Bridging-Header.h): Swift–ObjC bridging header for the example app.
+
+# Platform: Google Tag Manager (GTM) Template
+
+## Templates
+- [GTM Template (EN)](https://raw.githubusercontent.com/team-michael/notifly-gtm-template/refs/heads/main/template.tpl): Notifly GTM custom template (English). Defines template fields/variables/permissions and sandboxed JS implementation. Provides event/user property dispatch and endpoint invocation logic.
+- [GTM Template (KO)](https://raw.githubusercontent.com/team-michael/notifly-gtm-template/refs/heads/main/template.ko.tpl): Notifly GTM custom template (Korean). Same functionality with Korean labels/help text.
+- [GTM Template (Cafe24 Custom Event)](https://raw.githubusercontent.com/team-michael/notifly-gtm-template/refs/heads/main/template-cafe24-custom-event.tpl): Template for forwarding Cafe24 storefront custom events to Notifly via GTM. Supports event mapping and field transformation.

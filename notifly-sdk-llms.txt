@@ -1,0 +1,128 @@
+# Notifly SDK 문서 (LLMs용)
+# 이 파일은 AI 보조 도구가 SDK 소스 코드를 지능적으로 검색할 수 있도록 구조화된 인덱스를 제공합니다.
+# 모든 링크는 GitHub raw 콘텐츠를 가리키며, 직접 소스 코드를 불러와 보여줄 수 있습니다.
+# 포맷: - [제목](URL): 목적/기능/구현 개요/주요 사용법(간략)
+
+# Platform: iOS
+
+## 코어
+- [Notifly 메인 엔트리](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Notifly/Notifly.swift): Notifly iOS SDK의 싱글톤 엔트리 포인트. 초기화 후 Tracking/User/Notifications/InApp 매니저를 보유하며, UserDefaults 네임스페이스 등록 및 프로젝트/계정 자격 증명 보관을 수행.
+- [퍼블릭 API](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Notifly/Notifly+PublicAPI.swift): 공개 인터페이스. FirebaseApp 초기화 전제, 프로젝트/계정 설정으로 initialize 수행, APNs/FCM 토큰 연계, 세션 시작(trackSessionStartInternalEvent), 포그라운드/백그라운드 클릭 트래킹(trackPushClickInternalEvent), 사용자 ID/프로퍼티 설정(setExternalUserId/setUserProperties), In-App 이벤트 리스너 추가/해제, SDK 래퍼 타입/버전 지정(setSdkType/setSdkVersion), 스케줄 푸시 테스트(schedulePushNotification) 등을 제공.
+- [헬퍼](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Notifly/Notifly+Helper.swift): 내부 유틸 및 공통 보조 로직. 파라미터 유효성 검사(예: projectId 정규식 확인), SDK 래퍼 버전/타입 접근자, 공용 유틸리티(스레드-세이프 호출 래핑 등)를 제공.
+
+## 인프라스트럭처 - API
+- [API 클라이언트](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/API/NotiflyAPI.swift): 백엔드 HTTP 래퍼. 권한 부여(authorizeSession), 이벤트 업로드(trackEvent/재시도)와 사용자 상태 동기화(requestSyncState) 제공. 토큰 만료 메시지 감지 시 자동 갱신/재시도, Combine 기반 퍼블리셔 반환.
+- [요청 모델/빌더](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/API/NotiflyAPI+Request.swift): 요청 빌더/응답 디코더. 기본 헤더(X-Notifly-SDK-Version/Wrapper), Bearer 토큰 구성, JSON 인코딩, URLSession 퍼블리셔 래핑을 포함.
+
+## 인프라스트럭처 - 인증
+- [Auth](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/Auth/Auth.swift): 사용자명/비밀번호 기반 세션 권한 부여 및 갱신, Authorization 헤더 발급/보관, 토큰 만료 시 재발급 흐름을 담당. NotiflyAPI 요청 경로에서 authorizationPub와 연계되어 자동으로 인증 토큰을 주입.
+
+## 인프라스트럭처 - 인앱 메시지
+- [캠페인 모델](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/Campaign.swift): 인앱 캠페인/메시지 페이로드 모델. 타이틀/본문/이미지/동작 등 렌더링에 필요한 속성 포함.
+- [인앱 상수](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/InAppMessage+Constant.swift): 인앱 처리에 사용되는 키/이벤트/타이밍 상수.
+- [인앱 매니저](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/InAppMessageManager.swift): 인앱 메시지 라이프사이클/표시 제어, 사용자 상태 동기화(userStateManager.syncState), 노출 조건 평가, 이벤트 리스너 등록/해제, 중복 표시 방지 및 웹뷰/네이티브 렌더링 브리지 역할.
+- [세그멘테이션 헬퍼](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/SegmentationHelper.swift): 사용자 속성/행동 기반 노출 조건 평가. 랜덤 버킷/타겟팅 조건 지원.
+- [유저 상태 상수](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/UserState+Constant.swift): 유저 상태 정의 및 키.
+- [유저 상태 매니저](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/UserStateManager.swift): 첫 방문/재방문/이벤트 기반 상태 추적 및 보관.
+- [웹뷰 모달 VC](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/InAppMessage/WebViewModalViewController.swift): 인앱 웹 컨텐츠 렌더링. 닫기 동작/딥링크/트래킹 처리.
+
+- ## 인프라스트럭처 - 알림/트래킹/유저
+- [알림 매니저](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/Notifications/NotificationsManager.swift): APNs/FCM 토큰 획득 사이클 관리(타임아웃/재시도/지수 백오프), 중복 전송 억제 로깅, 포그라운드 표시 옵션 처리, 클릭 시 딥링크 오픈 및 내부 이벤트 트래킹, 권한/등록 재요청 로직 포함. APNs 수신 후 FCM 토큰 등록/재시도 플로우를 자동화.
+- [트래킹 매니저](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/Tracking/TrackingManager.swift): 세션 시작/푸시 클릭/디바이스·유저 프로퍼티 변경 등 내부 이벤트와 커스텀 이벤트(track)를 큐잉하여 배치 전송/재시도. 타임스탬프/타임존 검증과 이벤트 중복 방지, 속성 머지 로직 포함.
+- [유저 매니저](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/Infrastructures/User/UserManager.swift): Notifly 고유 유저ID 조회/저장(getNotiflyUserID), 외부 유저ID 설정(setExternalUserId), 사용자 프로퍼티 저장(setUserProperties)을 담당. In-App 상태/세그멘테이션과 연계.
+
+## 확장(Extension)
+- [Notification Service Extension](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyExtension/NotificationServiceExtension.swift): iOS 리치 푸시(이미지/비디오) 지원. 콘텐츠 수정 및 만료 처리, 전달 트래킹.
+- [Extension API](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyExtension/NotiflyExtensionAPI.swift): 확장 환경에서의 인증/트래킹/콘텐츠 로딩을 단순화하는 헬퍼 레이어. 메인 SDK 없이도 최소한의 통신 기능을 제공하여 확장 타겟에서 공통 로직 재사용.
+
+## 유틸리티
+- [AnyCodable](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/AnyCodable.swift): 다양한 JSON 타입을 안전하게 인코딩/디코딩하기 위한 타입 지움 래퍼.
+- [AppHelper](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/AppHelper.swift): 번들/환경/버전/권한 등 앱 컨텍스트 보조 유틸. URL 열기, 앱 스토어 링크 처리, 환경별 분기 등 UI 애피니티 로직 포함.
+- [AsyncWorker](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/AsyncWorker.swift): 백그라운드 태스크 실행/큐 관리. 타임아웃/취소 지원 및 직렬/병렬 작업 스케줄링. 초기화 후 비동기 작업(세션 시작/상태 동기화 등)을 안전하게 순차 처리.
+- [상수 모음](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/Constants.swift): 공통 상수(엔드포인트 경로/키/버전 등).
+- [자격증명 관리](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/Credentials.swift): 사용자명/비밀번호 자격 증명 모델. 인가 요청 바디에 직렬화하여 사용.
+- [로거](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/Logger.swift): 간단한 Info/Error 로그 유틸. 초기화/토큰 획득/알림 표시 등 SDK 주요 단계 로깅.
+- [메시지 데이터](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/MessageData.swift): 노티/인앱 메시지 페이로드 공용 모델.
+- [UserDefaults 확장](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/NotiflyCustomUserDefaults.swift): SDK 네임스페이스/플래그 저장소. 프로젝트ID/계정 정보, APNs 등록 여부, 래퍼 타입·버전 등을 저장하여 초기화/재시도 로직과 연계.
+- [에러 타입](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/NotiflyError.swift): SDK 전역 에러 카테고리와 메시지. 복구 힌트/컨텍스트 제공.
+- [타임존 유틸](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/Timezone.swift): 타임존 ID 유효성 검증 및 변환. 사용자 프로퍼티 설정 시 잘못된 타임존 자동 필터링.
+- [트래킹 이벤트 모델](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/TrackingEvent.swift): 표준/커스텀 이벤트 스키마와 직렬화.
+- [UUID 확장](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/SourceCodes/NotiflyUtil/UUID+.swift): RFC4122 기반 UUID 생성/파싱 보조.
+
+## 기타
+- [SDK 헤더](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/notifly_sdk.h): 퍼블릭 헤더/버전 정보.
+- [Privacy Info](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/PrivacyInfo.xcprivacy): 개인정보 처리 관련 선언.
+- [CocoaPods 스펙(메인)](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/notifly_sdk.podspec): Notifly iOS SDK의 CocoaPods 배포 메타데이터. 소스, 타겟, 의존성, 리소스 설정을 정의.
+- [CocoaPods 스펙(푸시 확장)](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/notifly_sdk_push_extension.podspec): Notification Service Extension 배포용 스펙. 확장 타겟, 종속성, 빌드 설정을 포함.
+- [DocC 문서](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Sources/Notifly/notifly-ios-sdk/notifly-ios-sdk/notifly_ios_sdk.docc/notifly_ios_sdk.md): DocC 기반 SDK 문서 개요. 퍼블릭 API와 개념 설명의 근간이 되는 문서 리소스.
+- [SwiftPM 패키지](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Package.swift): Swift Package 매니페스트. 의존성/타겟 정의.
+- [Makefile](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/Makefile): 로컬 빌드/테스트/배포 자동화 명령 집합.
+- [CHANGELOG](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/CHANGELOG.md): 릴리즈별 변경 사항.
+- [README](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/README.md): SDK 소개 및 기본 사용법.
+
+# 샘플 앱 (iOS)
+
+## NotiflyIOSSample (SwiftUI)
+- [앱 엔트리(앱 구조)](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyIOSSample/NotiflyIOSSampleApp.swift): SwiftUI 기반 샘플 앱 엔트리. SDK 초기화/환경 설정의 시작점.
+- [AppDelegate](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyIOSSample/AppDelegate.swift): 알림 권한/토큰 처리, 라이프사이클 연계 예시.
+- [딥링크 매니저](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyIOSSample/DeepLinkManager.swift): 알림/인앱에서 발생한 링크 라우팅 처리.
+- [딥링크 뷰](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyIOSSample/DeepLinkView.swift): 딥링크 목적지 렌더링 예시.
+- [콘텐츠 뷰](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyIOSSample/ContentView.swift): 샘플 UI 및 SDK 호출 연계.
+- [Notification Service Extension](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyIOSSample/NotiflyNotificationExtension/NotificationService.swift): 리치 푸시 처리 예시(미디어 첨부/수정).
+
+## NotiflyTestApp (UIKit)
+- [AppDelegate](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/AppDelegate.swift): SDK 초기화/푸시 등록/권한 처리 예시.
+- [SceneDelegate](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/SceneDelegate.swift): 윈도우/루트 컨트롤러 설정.
+- [메인 화면](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/MainViewController.swift): 주요 기능 진입점 UI.
+- [푸시 테스트](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/PushNotificationTestViewController.swift): 푸시 발송/수신/탭 테스트 흐름.
+- [트래킹 테스트](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/TrackingTestViewController.swift): 이벤트 트래킹 호출 및 응답 확인.
+- [유저 설정 테스트](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyTestApp/SourceCodes/UI/UserSettingsTestViewController.swift): 사용자 식별/프로퍼티 설정 흐름.
+- [Notification Service Extension](https://raw.githubusercontent.com/team-michael/notifly-ios-sdk/refs/heads/main/NotiflyTestApp/NotiflyNotificationExtension/NotificationService.swift): 리치 푸시 처리 예시(미디어 첨부/수정).
+
+# Platform: React-native
+
+## 코어 (TypeScript)
+- [JS 공개 API (index)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/index.tsx): React Native에서 사용하는 공개 인터페이스. initialize/setUserId/getNotiflyUserId/setUserProperties/setEmail/setPhoneNumber/setTimezone/trackEvent/disableInAppMessage/addNotificationClickListener 등을 제공. iOS에서는 객체 파라미터(JSON.stringify) 변환을 적용, Android 전용 setLogLevel 노출. TurboModule 사용 여부(__turboModuleProxy) 확인 후 네이티브 모듈을 강제 로드하거나 링크 오류를 안내.
+- [TurboModule 스펙](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/NativeNotiflyReactNativeSdk.ts): 네이티브 브리지 인터페이스 정의. initialize, setUserId, setUserProperties, setEmail, setPhoneNumber, setTimezone, getNotiflyUserId, trackEvent, setLogLevel(Android 전용), disableInAppMessage, addNotificationClickListener 메서드를 약속하며 TurboModuleRegistry를 통해 강제 조회.
+- [이벤트 상수](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/constants.ts): 이벤트 이름 상수 정의. 예: Notifly#NotificationClicked.
+- [이벤트 리시버](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/events/EventReceiver.ts): NativeEventEmitter로 네이티브 이벤트를 구독/전달. 이벤트별 리스너 배열을 관리하고, NotificationClicked 이벤트의 rawPayload(JSON 문자열)를 객체로 안전 파싱하여 전달(실패 시 원본 반환 및 로그).
+- [타입 (index)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/types/index.ts): InitializeParams(projectId/username/password), UserProperties/EventProperties 딕셔너리 타입 정의 및 notification 타입 재노출.
+- [타입 (notification)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/src/types/notification.ts): OSNotification/OSNotificationClickEvent/OSNotificationImportance 정의. 캠페인 ID, 제목/본문, 중요도(Android), URL/이미지, 보낸 시각/TTL, 커스텀 데이터, 원본 페이로드(rawPayload) 등 필드 포함.
+
+## 구성/빌드
+- [Babel 설정](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/babel.config.js): React Native 트랜스파일 설정. metro‑react‑native‑babel‑preset 기반.
+- [TypeScript 설정](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/tsconfig.json): 소스 타입체크 구성.
+- [TypeScript 빌드 설정](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/tsconfig.build.json): 배포물 출력을 위한 빌드 전용 TS 설정.
+- [Jest 설정](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/jest.config.js): 단위 테스트 구성.
+- [패키지 메타데이터](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/package.json): 패키지 정보/스크립트/종속성/메인 엔트리 정의.
+- [CocoaPods 스펙(RN)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/notifly_react_native_sdk.podspec): iOS 네이티브 브리지 배포 메타데이터. 소스/타겟/의존성/프레임워크 설정 포함.
+
+## iOS 네이티브 브리지
+- [Obj‑C 브리지 선언](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/ios/NotiflySdk.m): RCT_EXTERN_MODULE/_METHOD를 통해 Swift 구현을 React Native에 노출. initialize/setUserId/getNotiflyUserId/setUserProperties/trackEvent/disableInAppMessage/registerFCMToken 등을 Promise 기반으로 제공.
+- [Swift 브리지 구현](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/ios/NotiflySdk.swift): iOS Notifly SDK(notifly_sdk)를 호출하는 실제 구현. SDK 래퍼 타입/버전 설정, initialize, userId/프로퍼티 설정, 이메일/전화/타임존 설정, 이벤트 트래킹(JSON 파싱 포함), In‑App 비활성화, FCM 토큰 등록 등 제공.
+- [브리징 헤더](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/ios/NotiflySdk-Bridging-Header.h): Swift–ObjC 브리징을 위한 헤더 정의.
+
+## Android 네이티브 브리지
+- [RN 모듈 구현](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/main/java/tech/notifly/rn/NotiflySdkModule.kt): ReactMethod로 네이티브 SDK 호출. SDK 래퍼 타입/버전 설정, initialize, userId/프로퍼티 설정, 이메일/전화/타임존, 이벤트 트래킹, 로그 레벨 설정(Android), In‑App 비활성화 및 알림 클릭 리스너(이벤트 전송 포함). 코루틴으로 비동기 처리/스레드 전환, DeviceEventEmitter로 JS 이벤트 송신.
+- [유틸(이벤트 변환)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/main/java/tech/notifly/rn/NotiflySdkUtils.kt): 네이티브 객체를 React Native WritableMap으로 변환. NotificationClickEvent/Notification을 HashMap으로 매핑하고 각 필드를 JS 친화적 형태로 변환.
+- [패키지 등록](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/main/java/tech/notifly/rn/NotiflySdkPackage.kt): RN 패키지에 네이티브 모듈을 등록하여 자동 링크/수동 링크 시 인식.
+- [스펙(new architecture)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/newarch/NotiflySdkSpec.kt): NewArch 템플릿용 스펙 정의.
+- [스펙(old architecture)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/oldarch/NotiflySdkSpec.kt): OldArch 템플릿용 스펙 정의.
+- [AndroidManifest](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/src/main/AndroidManifest.xml): 패키지/퍼미션/프로바이더 등 Android 모듈 매니페스트 정의.
+- [Gradle 빌드 스크립트](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/android/build.gradle): Android 모듈 빌드/퍼블리시 설정.
+
+# 예제 앱 (React Native)
+- [루트 설정](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/package.json): 예제 앱 패키지/스크립트 설정.
+- [iOS Podfile](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/ios/Podfile): iOS 종속성/Pod 구성. 브리지/확장 타겟 포함.
+- [iOS Notification Service Extension](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/ios/NotiflyNotificationExtension/NotificationService.swift): 리치 푸시 처리 예시.
+- [메트로 설정](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/metro.config.js): 번들러 설정.
+- [엔트리/앱 소스](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/index.js): 예제 앱 엔트리. SDK initialize/호출 시나리오 연계.
+- [react‑native 설정](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/react-native.config.js): 링크/네이티브 설정.
+- [iOS 브리징 헤더(예제)](https://raw.githubusercontent.com/team-michael/notifly-react-native-sdk/refs/heads/main/example/ios/NotiflySdkExample-Bridging-Header.h): 예제 앱의 Swift–ObjC 브리징 헤더.
+
+# Platform: Google Tag Manager (GTM) Template
+
+## 템플릿
+- [GTM 템플릿 (영문)](https://raw.githubusercontent.com/team-michael/notifly-gtm-template/refs/heads/main/template.tpl): Notifly용 GTM 커스텀 템플릿(영문). 템플릿 필드/변수/권한 정의와 샌드박스 JS 구현을 포함. 이벤트/사용자 속성 전송 및 엔드포인트 호출 로직을 제공.
+- [GTM 템플릿 (국문)](https://raw.githubusercontent.com/team-michael/notifly-gtm-template/refs/heads/main/template.ko.tpl): Notifly용 GTM 커스텀 템플릿(국문). 동일 기능을 한국어 라벨/도움말로 제공.
+- [GTM 템플릿 (Cafe24 커스텀 이벤트)](https://raw.githubusercontent.com/team-michael/notifly-gtm-template/refs/heads/main/template-cafe24-custom-event.tpl): Cafe24 쇼핑몰에서 발생하는 커스텀 이벤트를 GTM을 통해 Notifly로 전달하기 위한 템플릿. 이벤트 매핑/필드 변환을 지원.
