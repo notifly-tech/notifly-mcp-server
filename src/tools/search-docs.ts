@@ -2,7 +2,7 @@
  * Docs Search Tool
  *
  * Search and retrieve relevant content from Notifly documentation using
- * the Mintlify-compatible llms.txt endpoint.
+ * the llms.txt endpoint.
  */
 
 import { z } from "zod";

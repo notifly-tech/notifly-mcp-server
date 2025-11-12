@@ -2,7 +2,7 @@
  * SDK Search Tool
  *
  * Search and retrieve relevant code snippets from Notifly SDK repositories
- * (iOS, Android, Flutter, React Native) using custom sdk_llms.txt format.
+ * using custom sdk_llms.txt format.
  */
 
 import { z } from "zod";
