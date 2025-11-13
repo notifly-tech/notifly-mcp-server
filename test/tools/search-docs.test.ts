@@ -68,7 +68,7 @@ describe("Documentation Search Tool", () => {
       expect(fetch).toHaveBeenCalledWith("https://docs.notifly.tech/ko/llms.txt");
     });
 
-    it("should select EN llms for English queries", async () => {
+    it("should use KO llms index even for English queries", async () => {
       const mockLlmsTxt = `
 - [Getting Started](https://docs.notifly.tech/getting-started): Intro
 `;
@@ -88,7 +88,7 @@ describe("Documentation Search Tool", () => {
         mockContext
       );
       expect(result).toContain("Getting Started");
-      expect(fetch).toHaveBeenCalledWith("https://docs.notifly.tech/llms.txt");
+      expect(fetch).toHaveBeenCalledWith("https://docs.notifly.tech/ko/llms.txt");
     });
   });
 
