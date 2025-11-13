@@ -13,14 +13,11 @@ import { BM25 } from "../utils/bm25.js";
 import { DOCS_SEARCH_DESCRIPTION_KO } from "./descriptions.js";
 
 const DOCS_BASE_URL = "https://docs.notifly.tech";
-const EN_LLMS_URL = `${DOCS_BASE_URL}/llms.txt`;
 const KO_LLMS_URL = `${DOCS_BASE_URL}/ko/llms.txt`;
 
-function pickDocsSource(query: string): { baseUrl: string; llmsUrl: string } {
-  const hasHangul = /[\p{Script=Hangul}]/u.test(query);
-  return hasHangul
-    ? { baseUrl: DOCS_BASE_URL, llmsUrl: KO_LLMS_URL }
-    : { baseUrl: DOCS_BASE_URL, llmsUrl: EN_LLMS_URL };
+function pickDocsSource(_query: string): { baseUrl: string; llmsUrl: string } {
+  // Always use the Korean docs index for now (EN is incomplete)
+  return { baseUrl: DOCS_BASE_URL, llmsUrl: KO_LLMS_URL };
 }
 
 const docsSearchInputSchema = z.object({

@@ -78,8 +78,8 @@ interface SdkEntry {
  * # Platform: iOS
  * - [Title](file/path.swift): Description
  */
-function canonicalizePlatformHeader(rawHeader: string): string {
-  const header = rawHeader.toLowerCase();
+function canonicalizePlatformHeader(rawHeader: string | undefined): string {
+  const header = (rawHeader ?? "").toLowerCase();
   if (/\breact\s*-?\s*native\b/.test(header)) return "react-native";
   if (/\bios\b/.test(header)) return "ios";
   if (/\bandroid\b/.test(header)) return "android";
@@ -87,7 +87,9 @@ function canonicalizePlatformHeader(rawHeader: string): string {
   if (/\b(typescript|javascript|js|web)\b/.test(header)) return "javascript";
   if (/\b(google\s*tag\s*manager|gtm)\b/.test(header)) return "gtm";
   // Fallback: first token without parentheses
-  return header.split("(")[0].trim().split(/\s+/)[0] || "unknown";
+  const withoutParen = header.includes("(") ? (header.split("(")[0] ?? "") : header;
+  const firstToken = withoutParen.trim().split(/\s+/)[0];
+  return firstToken || "unknown";
 }
 
 function parseSdkLlmsTxt(content: string): SdkEntry[] {
