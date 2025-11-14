@@ -37,8 +37,7 @@
     "dist",
     "README.md",
     "LICENSE",
-    "notifly-sdk-llms.txt",
-    "notifly-sdk-llms-en.txt"
+    "llms.txt"
   ],
   "publishConfig": {
     "access": "public"

@@ -177,16 +177,10 @@ function searchSdk(
     .filter((entry): entry is SdkEntry => entry !== undefined);
 }
 
-// Load SDK llms indexes directly from GitHub raw so users don't need local copies
+// Mapping index (aggregator) lives in this repository and lists per-SDK llms.txt URLs
 const SDK_LLMS_BASE =
   "https://raw.githubusercontent.com/notifly-tech/notifly-mcp-server/refs/heads/main";
-const EN_SDK_LLMS = `${SDK_LLMS_BASE}/notifly-sdk-llms-en.txt`;
-const KO_SDK_LLMS = `${SDK_LLMS_BASE}/notifly-sdk-llms.txt`;
-
-function pickSdkLlmsUrl(query: string): string {
-  const hasHangul = /[\p{Script=Hangul}]/u.test(query || "");
-  return hasHangul ? KO_SDK_LLMS : EN_SDK_LLMS;
-}
+const MAPPING_LLMS_URL = `${SDK_LLMS_BASE}/llms.txt`;
 
 function findNearestPackageRoot(startDir: string): string {
   // Walk up directories until a package.json is found or root is reached
@@ -201,9 +195,9 @@ function findNearestPackageRoot(startDir: string): string {
   return startDir;
 }
 
-function pickLocalSdkLlmsPath(query: string): string {
-  const hasHangul = /[\p{Script=Hangul}]/u.test(query || "");
-  const filename = hasHangul ? "notifly-sdk-llms.txt" : "notifly-sdk-llms-en.txt";
+function pickLocalSdkLlmsPath(): string {
+  // Local fallback for mapping file
+  const filename = "llms.txt";
   // Resolve relative to module, then walk to the nearest package root.
   // Works both when running from src/ (dev) and dist/ (published).
   const __filename = fileURLToPath(import.meta.url);
@@ -212,7 +206,7 @@ function pickLocalSdkLlmsPath(query: string): string {
   return path.join(pkgRoot, filename);
 }
 
-async function fetchSdkLlmsTxt(url: string): Promise<string> {
+async function fetchTextWithTimeout(url: string, userFriendlyName: string): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), DEFAULT_API_TIMEOUT);
   try {
@@ -222,15 +216,43 @@ async function fetchSdkLlmsTxt(url: string): Promise<string> {
     });
     clearTimeout(timer);
     if (!response.ok) {
-      throw new Error(`Unable to load sdk-llms.txt (HTTP ${response.status})`);
+      throw new Error(`Unable to load ${userFriendlyName} (HTTP ${response.status})`);
     }
     return await response.text();
   } catch (err) {
     clearTimeout(timer);
     throw new Error(
-      `Failed to load sdk-llms.txt from GitHub raw. ${err instanceof Error ? err.message : String(err)}`
+      `Failed to load ${userFriendlyName} from GitHub raw. ${err instanceof Error ? err.message : String(err)}`
     );
   }
+}
+
+/**
+ * Parse mapping llms.txt to extract per-SDK llms.txt URLs.
+ * Accepts:
+ *  - Markdown list items containing a (...) URL ending with /llms.txt
+ *  - Plain lines that are URLs ending with /llms.txt
+ */
+function parseMappingLlmsUrls(content: string): string[] {
+  const urls = new Set<string>();
+  const lines = content.split("\n");
+  const urlRegex = /\((https?:\/\/[^\s)]+\/llms\.txt)\)/i;
+  const plainUrlRegex = /^(https?:\/\/[^\s)]+\/llms\.txt)\s*$/i;
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const m1 = line.match(urlRegex);
+    if (m1 && m1[1]) {
+      urls.add(m1[1]);
+      continue;
+    }
+    const m2 = line.match(plainUrlRegex);
+    if (m2 && m2[1]) {
+      urls.add(m2[1]);
+      continue;
+    }
+  }
+  return Array.from(urls);
 }
 
 /**
@@ -306,27 +328,46 @@ export const sdkSearchTool: ToolDefinition<SdkSearchInput, string> = {
   },
   async handler(params: SdkSearchInput, _context: ServerContext): Promise<string> {
     try {
-      // Decide index (EN or KO) based on query
-      const llmsUrl = pickSdkLlmsUrl(params.query);
-      const localPath = pickLocalSdkLlmsPath(params.query);
+      // Load mapping llms.txt (list of per-SDK llms.txt URLs)
+      const mappingUrl = MAPPING_LLMS_URL;
+      const localPath = pickLocalSdkLlmsPath();
 
-      // Prefer online (always up-to-date). Fallback to bundled local file when offline/unavailable.
-      let content: string;
+      // Prefer online mapping (always up-to-date). Fallback to local llms.txt when offline/unavailable.
+      let mappingContent: string;
       try {
-        content = await fetchSdkLlmsTxt(llmsUrl);
+        mappingContent = await fetchTextWithTimeout(mappingUrl, "mapping llms.txt");
       } catch {
         try {
-          content = await readFile(localPath, "utf8");
+          mappingContent = await readFile(localPath, "utf8");
         } catch {
           throw new ApiError(
-            `Unable to load SDK index from network (${llmsUrl}) and local fallback (${localPath}).`
+            `Unable to load mapping index from network (${mappingUrl}) and local fallback (${localPath}).`
           );
         }
       }
-      const allEntries = parseSdkLlmsTxt(content);
+
+      // Extract per-SDK llms.txt URLs and fetch them all in parallel
+      const perSdkUrls = parseMappingLlmsUrls(mappingContent);
+      if (perSdkUrls.length === 0) {
+        throw new ApiError(`Mapping llms.txt did not contain any per-SDK indexes.`);
+      }
+
+      const perSdkContents = await Promise.all(
+        perSdkUrls.map(async (url) => {
+          try {
+            return await fetchTextWithTimeout(url, `SDK llms.txt (${url})`);
+          } catch (e) {
+            // If one fails, return empty to avoid failing entire search; user still gets partial results
+            return "";
+          }
+        })
+      );
+
+      // Parse and aggregate entries across SDKs
+      const allEntries = perSdkContents.filter((c) => !!c).flatMap((c) => parseSdkLlmsTxt(c));
 
       if (allEntries.length === 0) {
-        return `[Warning] No SDK Documentation Available\n\nUnable to parse SDK llms.txt. Please ensure sdk-llms.txt is properly configured.`;
+        return `[Warning] No SDK Documentation Available\n\nUnable to parse any SDK llms.txt. Please ensure each SDK has a valid llms.txt and the mapping file lists them.`;
       }
 
       // Search SDK entries
