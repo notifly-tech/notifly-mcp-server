@@ -409,9 +409,7 @@ describe("SDK Search Tool", () => {
         const res = await ORIGINAL_FETCH(perUrl as any);
         if (!res || !(res as any).ok) {
           // eslint-disable-next-line no-console
-          console.error(
-            `Non-200 for per-SDK llms.txt: ${perUrl} status=${(res as any)?.status}`
-          );
+          console.error(`Non-200 for per-SDK llms.txt: ${perUrl} status=${(res as any)?.status}`);
         }
         expect(res && (res as any).ok).toBe(true);
         const txt = await (res as any).text();
@@ -429,9 +427,7 @@ describe("SDK Search Tool", () => {
           const r = await ORIGINAL_FETCH(fileUrl as any);
           if (!r || !(r as any).ok) {
             // eslint-disable-next-line no-console
-            console.error(
-              `Non-200 for entry: ${fileUrl} status=${(r as any)?.status}`
-            );
+            console.error(`Non-200 for entry: ${fileUrl} status=${(r as any)?.status}`);
           }
           expect(r && (r as any).ok).toBe(true);
         }
