@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/notifly-tech-notifly-mcp-server-badge.png)](https://mseep.ai/app/notifly-tech-notifly-mcp-server)
+
 # Notifly MCP Server
 
 [![npm version](https://img.shields.io/npm/v/notifly-mcp-server.svg?logo=npm&label=npm)](https://www.npmjs.com/package/notifly-mcp-server)
