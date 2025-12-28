@@ -1,0 +1,48 @@
+{
+  "name": "notifly-mcp-server",
+  "owner": {
+    "name": "Grey Box",
+    "email": "contact@greyboxhq.com"
+  },
+  "metadata": {
+    "description": "Official Notifly MCP Server providing documentation search and SDK code search for seamless mobile SDK development"
+  },
+  "plugins": [
+    {
+      "name": "notifly-mcp-server",
+      "source": {
+        "source": "github",
+        "repo": "notifly-tech/notifly-mcp-server"
+      },
+      "description": "A Model Context Protocol server enabling AI agents to deliver real-time, trustworthy Notifly documentation and SDK code examples. Provides documentation search with semantic ranking, SDK source code search across iOS/Android/Flutter/React Native.",
+      "author": {
+        "name": "Grey Box",
+        "email": "contact@greyboxhq.com"
+      },
+      "homepage": "https://docs.notifly.tech/ko/devtools/notifly-mcp-server",
+      "repository": "https://github.com/notifly-tech/notifly-mcp-server",
+      "license": "MIT with Custom Restrictions",
+      "keywords": [
+        "mcp",
+        "notifly",
+        "push-notifications",
+        "sdk",
+        "ios",
+        "android",
+        "flutter",
+        "react-native",
+        "mobile-sdk",
+        "documentation",
+        "code-search"
+      ],
+      "category": "productivity",
+      "strict": false,
+      "mcpServers": {
+        "notifly-mcp-server": {
+          "command": "npx",
+          "args": ["-y", "notifly-mcp-server@latest"]
+        }
+      }
+    }
+  ]
+}
