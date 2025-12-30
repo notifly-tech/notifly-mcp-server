@@ -10,10 +10,7 @@
   "plugins": [
     {
       "name": "notifly-mcp-server",
-      "source": {
-        "source": "github",
-        "repo": "notifly-tech/notifly-mcp-server"
-      },
+      "source": "./",
       "description": "A Model Context Protocol server enabling AI agents to deliver real-time, trustworthy Notifly documentation and SDK code examples. Provides documentation search with semantic ranking, SDK source code search across iOS/Android/Flutter/React Native.",
       "author": {
         "name": "Grey Box",
