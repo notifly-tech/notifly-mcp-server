@@ -1,7 +1,7 @@
 # Notifly MCP Server
 
 [![npm version](https://img.shields.io/npm/v/notifly-mcp-server.svg?logo=npm&label=npm)](https://www.npmjs.com/package/notifly-mcp-server)
-[![npm downloads](https://img.shields.io/npm/dm/notifly-mcp-server.svg)](https://www.npmjs.com/package/notifly-mcp-server)
+[![npm downloads](https://img.shields.io/npm/d18m/notifly-mcp-server.svg)](https://www.npmjs.com/package/notifly-mcp-server)
 [![License](https://img.shields.io/npm/l/notifly-mcp-server.svg)](LICENSE)
 
 Notifly MCP Server enables AI agents to deliver real‑time, trustworthy Notifly
